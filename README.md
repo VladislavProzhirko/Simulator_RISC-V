@@ -12,6 +12,6 @@
 + scr/code/Decoder.cs - класс для декодирования иструкций RISC-V
 + scr/code/Memory.cs - класс для реализации работы с памятью и регистровым файлом
 + scr/data/memory.hex - файл с памятью
-+ scr/data/register.hex - регитстровый файл
++ scr/data/register.hex - регистровый файл
 + test/test.S - программа для тестирования на RISC-V ASM
 + test/test.bin - бинарный образ программы для тестирования
