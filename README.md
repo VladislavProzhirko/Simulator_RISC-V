@@ -10,7 +10,7 @@
 # Файлы проекта
 + scr/code/Alg_operation.cs - класс для реализации иструкций RISC-V
 + scr/code/Decoder.cs - класс для декодирования иструкций RISC-V
-+ scr/code/Memory.cs - класс для реализации работы с памятью и регистровым файлом
++ scr/code/Memory - директория для реализации работы с памятью и регистровым файлом
 + scr/data/memory.hex - файл с памятью
 + scr/data/register.hex - регистровый файл
 + test/test.S - программа для тестирования на RISC-V ASM
