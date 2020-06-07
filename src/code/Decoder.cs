@@ -181,7 +181,7 @@ namespace Simulator_RISCV
                 AsmInst.Op3 = Instruction.Substring(0, 7) + Instruction.Substring(20, 5);
                 AsmInst.Op3 = Convert.ToString(Convert.ToInt32(AsmInst.Op3, 2), 16);
                 AsmInst.Asm_Comand = AsmInst.Inst + " " + AsmInst.Op1 + ", 0x" + AsmInst.Op3 + "(" + AsmInst.Op2 + ")";
-                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3.PadLeft(8, '0');
+                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3;
             }
 
             if ((AsmInst.Inst == "ADDI" || AsmInst.Inst == "SLTI" || AsmInst.Inst == "SLTIU" || AsmInst.Inst == "XORI" ||

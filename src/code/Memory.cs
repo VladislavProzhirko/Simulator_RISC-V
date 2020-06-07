@@ -23,7 +23,7 @@ namespace Simulator_RISCV
         }
         public string Read_data_byte(string address)
         {
-            string row = address.Substring(0, 7) + "0";
+            string row = address.Substring(2, 7) + "0";
             int offset = Convert.ToInt32(address, 16) % 16;
             string[] buf = Alg_operation.Data_seg[row].Split(' ');
             return buf[offset];
@@ -32,7 +32,7 @@ namespace Simulator_RISCV
         //funct load word to memory
         public string Read_data_hw(string address)
         {
-            string row = address.Substring(0, 7) + "0";
+            string row = address.Substring(2, 7) + "0";
             int offset = Convert.ToInt32(address, 16) % 16;
             string[] buf = Alg_operation.Data_seg[row].Split(' ');
             if (offset != 15)
@@ -44,9 +44,9 @@ namespace Simulator_RISCV
         //funct load word to memory
         public string Read_data_word(string address)
         {
-            string row = address.Substring(0, 7) + "0";
+            string row = address.Substring(2, 7) + "0";
             int offset = Convert.ToInt32(address, 16) % 16;
-            string[] buf = Alg_operation.Data_seg[row].Split(' ');
+            string[] buf = Alg_operation.Data_seg[row.ToLower()].Split(' ');
 
             switch (offset)
             {

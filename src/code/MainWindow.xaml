@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Name="mainw" x:Class="Simulator_RISCV.MainWindow"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="861.6" WindowStartupLocation="Manual" ResizeMode="CanResizeWithGrip" MinWidth="800" MinHeight="450" Initialized="Window_Initialized">
+        Title="MainWindow" Height="450" Width="950" WindowStartupLocation="Manual" ResizeMode="CanResizeWithGrip" MinWidth="800" MinHeight="450" Initialized="Window_Initialized">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -14,61 +14,80 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <TabControl x:Name="Editor" Margin="26,0,25.2,0" Grid.Row="1" >
+        <TabControl x:Name="Editor" Margin="10,0,10.2,0" Grid.Row="1" >
             <TabControl.Resources>
                 <Style TargetType="{x:Type TabPanel}">
                     <Setter Property="HorizontalAlignment" Value="Center" />
                 </Style>
             </TabControl.Resources>
-            <TabItem Header="Editor" HorizontalAlignment="Right" Width="200">
-                <Grid Background="#FFE5E5E5">
-                    <TextBox x:Name="textBox" Margin="10,10,9.8,11.2" TextWrapping="Wrap" Text="TextBox"/>
-                </Grid>
-            </TabItem>
             <TabItem Header="Simulator" Width="200">
-                <Grid Background="#FFE5E5E5" Margin="0,0,-0.2,1.2">
+                <Grid Background="#FFE5E5E5" >
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="206*"/>
-                        <ColumnDefinition Width="193*"/>
+                        <ColumnDefinition Width="224*"/>
+                        <ColumnDefinition Width="380"/>
                     </Grid.ColumnDefinitions>
-                    <GroupBox x:Name="CC" Header="Code and console" Grid.Column="0" Margin="0,0,5,0.8">
+                    <GroupBox x:Name="CC" Header="Code and console" Grid.Column="0" >
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="34*"/>
-                                <RowDefinition Height="25*"/>
-                                <RowDefinition Height="228*"/>
-                                <RowDefinition Height="70*"/>
+                                <RowDefinition Height="35"/>
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="145"/>
+                                <RowDefinition Height="130*"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="196*"/>
-                                <ColumnDefinition Width="199*"/>
+                                <ColumnDefinition Width="214*"/>
+                                <ColumnDefinition Width="120*"/>
                             </Grid.ColumnDefinitions>
-                            <ScrollViewer Grid.Column="0" Margin="0,0,0.2,9.8" Grid.Row="2" Grid.ColumnSpan="2">
+                            
+                            <Grid Grid.Row="1" Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="35*"/>
+                                    <ColumnDefinition Width="50*"/>
+                                    <ColumnDefinition Width="75*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label x:Name="label" Content="PC" Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                                <Label x:Name="label1" Content="Code" Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                                <Label x:Name="label2" Content="Instraction" Grid.Row="0" Grid.Column="2" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                            </Grid>
+                            <!--<ScrollViewer Grid.Row="2" Grid.RowSpan="2" Grid.Column="0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="236*"/>
-                                        <ColumnDefinition Width="179*"/>
+                                        <ColumnDefinition Width="38*"/>
+                                        <ColumnDefinition Width="81*"/>
+                                        <ColumnDefinition Width="38*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="orig" TextWrapping="Wrap" Margin="1.2,6,0.2,9.2"  VerticalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Column="0"/>
-                                    <TextBox x:Name="mash" TextWrapping="Wrap" Margin="4.8,6,3.4,9.2"  VerticalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Column="1"/>
+                                    <TextBox x:Name="Counter" TextWrapping="Wrap"  VerticalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Column="0" />
+                                    <TextBox x:Name="instr" TextWrapping="Wrap"  VerticalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Column="1" />
+                                    <TextBox x:Name="decode" TextWrapping="Wrap"  VerticalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Column="2" />
                                 </Grid>
-                            </ScrollViewer>
+                            </ScrollViewer>-->
+                            <TextBox x:Name="instr" TextWrapping="Wrap"  VerticalScrollBarVisibility="Visible" IsReadOnly="True" Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" ScrollViewer.CanContentScroll="True"/>
 
-                            <Label x:Name="label" Content="Machine code" Margin="16,0,10.2,0" Grid.Column="1" Grid.Row="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-                            <Label x:Name="label1" Content="Original code" Grid.Row="1" Margin="10,0,4,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-                            <TextBlock x:Name="Console_window" Text="{Binding Path = Console, UpdateSourceTrigger = PropertyChanged}" Canvas.Top="269" Canvas.Left="6" Grid.ColumnSpan="2" Margin="10,10.2,10.2,10.2" Grid.Row="3"/>
-                            <WrapPanel Grid.ColumnSpan="2" Margin="0,0,10.2,0">
-                                <Button x:Name="run_btn" Content="RUN" Width="75" Margin="10,10,10,0" Click="Run_btn_Click"/>
-                                <Button x:Name="step_btn" Content="Step"  Width="75" Margin="10,10,10,0" Click="Step_btn_Click"/>
-                                <Button x:Name="reset_btn" Content="Reset" Width="75" Margin="10,10,10,0" Click="reset_btn_Click"/>
-                                <Label x:Name="PC_lab" Content="CLK" HorizontalAlignment="Center" Height="25" Margin="0,5,0,0"/>
-                                <TextBlock x:Name="reg_CLK" Text="{Binding CLK, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,10,0" Width="auto" Height="19"/>
+                            <GroupBox Header="Console" Grid.Column="1" Grid.Row="3" >
+                                <TextBlock x:Name="Console_window" Text="{Binding Path = Console, UpdateSourceTrigger = PropertyChanged}"  TextWrapping="WrapWithOverflow"/>
+                            </GroupBox>
+                            <Label x:Name="label_Copy" Content="Stage" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Grid.Column="2" Grid.Row="1"/>
+                            <WrapPanel Grid.Row="0" Grid.ColumnSpan="3" VerticalAlignment="Center" Height="25" Margin="0,4,-0.4,3.8">
+                                <Button x:Name="run_btn" Content="RUN" Width="75" Margin="0,0,10,0" Click="Run_btn_Click" VerticalAlignment="Center"/>
+                                <Button x:Name="step_btn" Content="Step"  Width="75" Click="Step_btn_Click" VerticalAlignment="Center"/>
+                                <Button x:Name="reset_btn" Content="Reset" Width="75" Margin="10,0,10,0" Click="reset_btn_Click" VerticalAlignment="Center"/>
+                                <Label x:Name="PC_lab" Content="CLK" HorizontalAlignment="Center" Height="25" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="reg_CLK" Text="{Binding CLK, UpdateSourceTrigger=PropertyChanged}" Width="100" Margin="10,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </WrapPanel>
-
+                            <DataGrid x:Name="grid_stage" ItemsSource="{Binding Stage_conv}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" IsReadOnly="True" Grid.Row="2" Grid.Column="2">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Stage" Binding= "{Binding Key}" Width="Auto" />
+                                    <DataGridTextColumn Header="Instraction" Binding= "{Binding Value}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
 
                         </Grid>
+
                     </GroupBox>
-                    <GroupBox x:Name="MR" Header="Memory and registers" Margin="10,0,9.4,10.8" Grid.Column="1">
+                    <GroupBox x:Name="MR" Header="Memory and registers" Margin="4,0,9.6,10.8" Grid.Column="1">
                         <TabControl x:Name="tabControl1" Margin="0,0,-4,-15">
                             <TabControl.Resources>
                                 <Style TargetType="{x:Type TabPanel}">
@@ -129,13 +148,13 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Menu x:Name="menu" HorizontalAlignment="Left" Height="25" VerticalAlignment="Top" Width="792">
+        <Menu x:Name="menu" Height="25" VerticalAlignment="Top">
             <MenuItem x:Name ="Item_File" Header="File" Height="25" Width="120" HorizontalContentAlignment="Center">
                 <MenuItem x:Name="Open_file" Header="Открыть..." Height="25" Width="200" Click="MenuItem_Click"/>
                 <MenuItem x:Name ="Save_log" Header="Сохранить log-файл" HorizontalAlignment="Left" Height="25" Width="200"/>
             </MenuItem>
 
-            <MenuItem x:Name ="Item_Con" Header="Conveyor" Height="25" Width="140" HorizontalContentAlignment="Center">
+            <MenuItem x:Name ="Item_Con" Header="Pipeline" Height="25" Width="140" HorizontalContentAlignment="Center">
                 <MenuItem x:Name="Single" Header="Single-stage" Height="25" Width="200" Click="Single_Click" IsCheckable="True"/>
                 <MenuItem x:Name ="Five" Header="Five-stage" HorizontalAlignment="Left" Height="25" Width="200" Click="Five_Click" />
             </MenuItem>

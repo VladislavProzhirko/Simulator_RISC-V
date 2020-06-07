@@ -118,56 +118,53 @@ namespace Simulator_RISCV
                 i++;
             }
         }
-        public bool Comand_Real(string inst)
+        public string Comand_Real(string inst)
         {
             Operation my_inst = new Operation();
             uint inp1;
             uint inp2;
-
-
             try
             {
                 my_inst.name_op = inst.Split(' ')[0].ToLower();
                 my_inst.op1 = inst.Split(' ')[1];
                 my_inst.op2 = inst.Split(' ')[2];
                 my_inst.op3 = inst.Split(' ')[3];
-
             }
 
             catch (Exception)
             {
                 my_inst.op3 = "";
             }
-            //PC = PC;
             switch (my_inst.name_op)
             {
                 case ("lui"):
                     my_inst.number1 = (my_inst.op2 + "000").PadLeft(8, '0');
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
                     if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                        return "0x" + my_inst.number1.ToUpper() + " " + my_inst.op1;
+                    return "";
 
                 case ("auipc"):
                     my_inst.number1 = Convert.ToString(Convert.ToUInt32(PC, 16) + Convert.ToInt32(my_inst.op2, 16), 16).PadLeft(8, '0');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString((Convert.ToUInt32(PC, 16) + 4), 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4          
-                    return true;
+                    if (my_inst.op1 != "x0")
+                        return  "0x" + my_inst.number1.ToUpper() +  " " + my_inst.op1;
+                    return "";
 
                 case ("jal"):
-                    my_inst.number1 = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst)
+                    my_inst.number1 = (Convert.ToUInt32(Registers[my_inst.op2][1], 16) + Convert.ToUInt32(PC, 16)).ToString("X");
+                    PC = my_inst.number1.PadLeft(8, '0');
                     if (my_inst.op1 != "x0")
-                        Registers["x1"][0] = "0x" + my_inst.number1.ToUpper();
-                    PC = (Convert.ToUInt32(PC, 16) + Convert.ToUInt32(my_inst.op2, 16) - 4).ToString("X").PadLeft(8, '0');
-                    return true;
+                        return "0x" + Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0').ToUpper() + " " + my_inst.op1;
+                    return "";
 
                 case ("jalr")://???? Обращение в память, не понимаю как работает
                     my_inst.number1 = (Convert.ToUInt32(Registers[my_inst.op2][1], 16) + Convert.ToUInt32(my_inst.op3, 16)).ToString("X");
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0').ToUpper();
+                    my_inst.number2 = "0x" + Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0').ToUpper();
                     PC = my_inst.number1.PadLeft(8, '0');
-                    return true;
+                    if (my_inst.op1 != "x0")
+                        return  my_inst.number2 + " " + my_inst.op1;
+                    return "";
 
                 case ("beq")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -176,7 +173,7 @@ namespace Simulator_RISCV
                         PC = (Convert.ToUInt32(PC, 16) + Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0');
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("bne")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -185,7 +182,7 @@ namespace Simulator_RISCV
                         PC = (Convert.ToUInt32(PC, 16) + Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0');//(pc(2cc)->(10cc) + offset(16cc)->(10cc))->16cc
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("blt")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -196,7 +193,7 @@ namespace Simulator_RISCV
                         PC = (Convert.ToUInt32(PC, 16) + Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0');//(pc(2cc)->(10cc) + offset(16cc)->(10cc))->16cc
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("bge")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -205,7 +202,7 @@ namespace Simulator_RISCV
                         PC = (Convert.ToUInt32(PC, 16) + Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0');//(pc(2cc)->(10cc) + offset(16cc)->(10cc))->16cc
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("bltu")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -235,7 +232,7 @@ namespace Simulator_RISCV
                     }
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("bgeu")://???? Обращение в память
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
@@ -265,86 +262,63 @@ namespace Simulator_RISCV
                     }
                     else
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "";
 
                 case ("lb"):
-                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
+                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);//rs1
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    my_inst.number2 = memory.Read_data_byte(my_inst.number2);
-                    if (my_inst.number2[0] >= '8')
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, 'F').ToUpper();
-                        else
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    return "0x" + my_inst.number2.ToUpper() + " " + my_inst.op1;
 
                 case ("lh"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    my_inst.number2 = memory.Read_data_hw(my_inst.number2);
-                    if (my_inst.number2[0] >= '8')
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, 'F').ToUpper();
-                        else
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');// rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    return "0x" + my_inst.number2.ToUpper() + " " + my_inst.op1;
 
                 case ("lw"):
-                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
+                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);//rs1
                     if (my_inst.op3[0] >= '8')
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'f');
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    my_inst.number2 = memory.Read_data_word(my_inst.number2);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number2.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
-                    return true;
+                    return "0x" + my_inst.number2.ToUpper() + " " + my_inst.op1;
 
                 case ("lbu"):
-                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
+                    my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);//rs1
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    my_inst.number2 = memory.Read_data_byte(my_inst.number2);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    return "0x" + my_inst.number2.PadLeft(8, '0').ToUpper() + " " + my_inst.op1;
 
                 case ("lhu"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    my_inst.number2 = memory.Read_data_hw(my_inst.number2);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number2.PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    return "0x" + my_inst.number2.ToUpper() + " " + my_inst.op1;
 
                 case ("sb"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(8, 2);
-                    memory.Write_data(my_inst.number2, my_inst.number1);
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "0x" + my_inst.number2 + " " + my_inst.number1;
+                    //memory.Write_data(my_inst.number2, my_inst.number1);
 
                 case ("sh"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(6, 4);
-                    memory.Write_data(my_inst.number2, my_inst.number1);
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return my_inst.number2 + " " + my_inst.number1;
+                    //memory.Write_data(my_inst.number2, my_inst.number1);
 
                 case ("sw"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Convert.ToString(Convert.ToUInt32(my_inst.number2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
                     my_inst.number1 = Registers[my_inst.op1][1].Substring(2, 8);
-                    memory.Write_data(my_inst.number2, my_inst.number1);
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return my_inst.number2 + " " + my_inst.number1;
+                    //memory.Write_data(my_inst.number2, my_inst.number1);
 
                 case ("addi"):
                     my_inst.op2 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -352,10 +326,8 @@ namespace Simulator_RISCV
                         if (my_inst.op3[0] >= '8')
                             my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
                     my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.op2, 16) + Convert.ToUInt32(my_inst.op3, 16), 16).PadLeft(8, '0');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    return "0x" + my_inst.number1.ToUpper() + " " + my_inst.op1;
 
                 case ("slti"):
                     my_inst.op2 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -365,10 +337,8 @@ namespace Simulator_RISCV
                         my_inst.number1 = "00000001";
                     else
                         my_inst.number1 = "00000000";
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4*/
-                    return true;
+                    return "0x" + my_inst.number1.ToUpper() + " " + my_inst.op1;
 
                 case ("sltiu"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -398,38 +368,36 @@ namespace Simulator_RISCV
                             my_inst.number1 = "00000000";
                         //Записать в память
                     }
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "0x" + my_inst.number1.ToUpper() + " " + my_inst.op1;
 
                 case ("xori"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
                     if (my_inst.op3 == "ffffffff")
                     {
                         my_inst.number2 = (~Convert.ToUInt32(my_inst.number2, 16)).ToString("X");
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number2;
-                        return true;
+                        //Registers[my_inst.op1][1] = "0x" + my_inst.number2;
+                        return "0x" + my_inst.number2.ToUpper() + " " + my_inst.op1;
                     }
                     if (my_inst.op3[0] >= '8')
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
                     else
                         my_inst.op3 = my_inst.op3.PadLeft(8, '0');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number2, 16) ^ Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper(); ;
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
-
+                    // rd = pc + length(inst) pc + 4
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number2, 16) ^ Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
+                    
                 case ("ori"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     if (my_inst.op3[0] >= '8')
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
                     else
                         my_inst.op3 = my_inst.op3.PadLeft(8, '0');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number2, 16) | Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper(); ;
                     PC = Convert.ToString((Convert.ToUInt32(PC, 16) + 4), 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number2, 16) | Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
+                    
 
                 case ("andi"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -437,28 +405,25 @@ namespace Simulator_RISCV
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
                     else
                         my_inst.op3 = my_inst.op3.PadLeft(8, '0');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number2, 16) & Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper(); ;
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number2, 16) & Convert.ToUInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("slli"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     if (my_inst.op3[0] >= '8')
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number2, 16) << Convert.ToInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper(); ;
                     PC = Convert.ToString((Convert.ToUInt32(PC, 16) + 4), 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number2, 16) << Convert.ToInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("srli"):
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
                     if (my_inst.op3[0] >= '8')
                         my_inst.op3 = my_inst.op3.PadLeft(8, 'F');
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number2, 16) >> Convert.ToInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper(); ;
                     PC = Convert.ToString((Convert.ToUInt32(PC, 16) + 4), 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number2, 16) >> Convert.ToInt32(my_inst.op3, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("srai"):///
                     my_inst.number2 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -468,12 +433,10 @@ namespace Simulator_RISCV
                     if (my_inst.number2[0] >= '8')
                     {
                         my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 16), 2).PadLeft(32, '0').Substring(Convert.ToInt32(my_inst.op3, 16), 32 - Convert.ToInt32(my_inst.op3, 16)).PadLeft(32, '1');
-                        my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 2), 16);
+                        my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 2), 16).PadLeft(8, '0');
                     }
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("add"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -482,15 +445,14 @@ namespace Simulator_RISCV
                     {
                         my_inst.number1 = Convert.ToString(checked(Convert.ToUInt32(my_inst.number1, 16) + Convert.ToUInt32(my_inst.number2, 16)), 16);
                         //Записать в память
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number1.PadLeft(8, '0').ToUpper();
-                        PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
+                        PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                        return "0x" + my_inst.number1.PadLeft(8, '0').ToUpper() + " " + my_inst.op1;
                     }
                     catch (Exception)
                     {
                         my_inst.exeption = "Возникло переполнение при выполнении оперции сложения";
+                        return "";
                     }
-                    return true;
 
                 case ("sub"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -498,35 +460,30 @@ namespace Simulator_RISCV
                     try
                     {
                         my_inst.number1 = Convert.ToString(checked(Convert.ToUInt32(my_inst.number1, 16) - Convert.ToUInt32(my_inst.number2, 16)), 16);
-                        if (my_inst.op1 != "x0")
-                            Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                         PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
+                        return "0x" + my_inst.number1.PadLeft(8, '0').ToUpper() + " " + my_inst.op1;
                     }
                     catch (Exception)
                     {
                         my_inst.exeption = "Возникло переполнение при выполнении оперции вычитания";
+                        return "";
                     }
-                    return true;
 
                 case ("sll"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number1, 16) << Convert.ToInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number1, 16) << Convert.ToInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("slt"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
                     if (String.Compare(my_inst.number1, my_inst.number2) < 0)
-                        my_inst.number1 = "00000001";
+                        return "0x00000001" + " " + my_inst.op1;
                     else
-                        my_inst.number1 = "00000000";
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4*/
-                    return true;
+                        return "0x00000000" + " " + my_inst.op1;
 
                 case ("sltu"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -560,26 +517,22 @@ namespace Simulator_RISCV
                         else
                             my_inst.number1 = "00000000";
                     }
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("xor"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number1, 16) ^ Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number1, 16) ^ Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("srl"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number1, 16) >> Convert.ToInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
                     PC = Convert.ToString((Convert.ToUInt32(PC, 16) + 4), 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number1, 16) >> Convert.ToInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("sra"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
@@ -588,28 +541,24 @@ namespace Simulator_RISCV
                     if (my_inst.number2[0] >= '8')
                     {
                         my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 16), 2).PadLeft(32, '0').Substring(Convert.ToInt32(my_inst.op3, 16), 32 - Convert.ToInt32(my_inst.op3, 16)).PadLeft(32, '1');
-                        my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 2), 16);
+                        my_inst.number1 = Convert.ToString(Convert.ToUInt32(my_inst.number1, 2), 16).PadLeft(8, '0');
                     }
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + my_inst.number1.ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("or"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number1, 16) | Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
-                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0'); // rd = pc + length(inst) pc + 4
-                    return true;
+                    PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number1, 16) | Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case ("and"):
                     my_inst.number1 = Registers[my_inst.op2][1].Substring(2, 8);
                     my_inst.number2 = Registers[my_inst.op3][1].Substring(2, 8);
-                    if (my_inst.op1 != "x0")
-                        Registers[my_inst.op1][1] = "0x" + (Convert.ToUInt32(my_inst.number1, 16) + Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
                     PC = Convert.ToString(Convert.ToUInt32(PC, 16) + 4, 16).PadLeft(8, '0');
-                    return true;
+                    my_inst.number1 = (Convert.ToUInt32(my_inst.number1, 16) + Convert.ToUInt32(my_inst.number2, 16)).ToString("X").PadLeft(8, '0').ToUpper();
+                    return "0x" + my_inst.number1 + " " + my_inst.op1;
 
                 case "ecall":
                     my_inst.number1 = Registers["x10"][1].Substring(2, 8);
@@ -622,29 +571,30 @@ namespace Simulator_RISCV
                                 {
                                     my_inst.number2 = Registers["x11"][1].Substring(2, 8);
                                     Console += Convert.ToInt32(my_inst.number2, 16).ToString();
-                                    return true;
+                                    return "";
                                 }
                             case 11:
                                 {
                                     my_inst.number2 = Registers["x11"][1].Substring(8, 2);
                                     byte buf = Convert.ToByte(Convert.ToInt32(my_inst.number2, 16));
                                     Console += Encoding.GetEncoding(1251).GetString((new byte[] { buf }));
-                                    return true;
+                                    return "";
                                 }
                             default:
                                 {
-                                    return false;
+                                    Console += "\necall don't worked with a0 = " + my_inst.number1;
+                                    return "ecall exit";
                                 }
                         }
                     }
                     else
                     {
                         Console += "\nДостигнут конец программы!! :D";
-                        return false;
+                        return "ecall exit";
                     }
                 default:
                         Console += "\nДостигнут конец программы!! :D";
-                        return false;
+                        return "";
             }
         }
     }
