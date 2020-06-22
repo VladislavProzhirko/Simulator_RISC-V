@@ -6,7 +6,7 @@ M:
 matrix:
 .word 7, 4, 5, 5, 7
 .word 11, 4, 5, 8, 10
-.word 3, 12, 3, 6 ,4
+.word 3, 12, 2, 6 ,4
 .word 9, 7, 4, 8, 3
 result:
 .word 0
@@ -14,7 +14,7 @@ result:
 .text
 
 main:
-la a2 N
+la a2, N
 la a3, M
 la a4, matrix
 la a5, result
