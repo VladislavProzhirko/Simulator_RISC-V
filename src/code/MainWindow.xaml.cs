@@ -22,6 +22,8 @@ namespace Simulator_RISCV
         }
         public int wait;
         string PC { get; set; }
+        string path_memory;
+        string path_registers;
         string result_ALU;
         string result_MEM;
         string prev_result_ALU;
@@ -49,9 +51,13 @@ namespace Simulator_RISCV
 
         private void Window_Initialized(object sender, EventArgs e)
         {
+            DirectoryInfo dirInfo = new DirectoryInfo(Environment.CurrentDirectory + @"\src\data");
+            if (!dirInfo.Exists)
+                dirInfo.Create();
             run_btn.IsEnabled = step_btn.IsEnabled = reset_btn.IsEnabled = false;
             Prov = new Alg_operation();
             Decoder = new Decoder();
+            Mem = new Memory();
             Prov.Console = "";
             Single.IsChecked = Prov.Stage = true;
             Prov.CLK = 0;
@@ -60,12 +66,11 @@ namespace Simulator_RISCV
             Code_seg = new Dictionary<string, string>();
             Alg_operation.Data_seg = new Dictionary<string, string>();
             Set_default();
-            Write_reg();
             grid_code.ItemsSource = Code_seg;
             grid_data.ItemsSource = Alg_operation.Data_seg;
-            data_register.ItemsSource = Prov.Registers;
+            data_register.ItemsSource = Memory.Registers;
             instr.Text = "";
-            Mem = new Memory();
+            
         }
 
         void Set_default()
@@ -89,7 +94,6 @@ namespace Simulator_RISCV
             Single.IsEnabled = Five.IsEnabled = false;
             reset_btn.IsEnabled = true;
             instruction = Read_code();
-            
             Stage_conv["Fetch"] = instruction;
             if (instruction == "00000000")
             {
@@ -98,6 +102,8 @@ namespace Simulator_RISCV
                 Prov.Console = "Error PC:" + Prov.PC;
                 grid_data.Items.Refresh();
                 data_register.Items.Refresh();
+                Write_reg();
+                Write_mem();
                 return;
             }
             if (Decoder.DecodeInstruction(instruction, out Full, out Asm) == 1)
@@ -108,6 +114,8 @@ namespace Simulator_RISCV
                 Prov.Console = "Error PC:" + Prov.PC;
                 grid_data.Items.Refresh();
                 data_register.Items.Refresh();
+                Write_reg();
+                Write_mem();
                 return;
             }
             else
@@ -115,15 +123,17 @@ namespace Simulator_RISCV
                 Stage_conv["Write back"] = Stage_conv["Memory"] = Stage_conv["Execute"] = Stage_conv["Decode"] = Asm;
                 Prov.PC = Prov.PC.ToUpper();
                 instr.Text += Prov.PC + "\t" + instruction + "\t" + Asm + "\n";
-                result_ALU = Prov.Comand_Real(Full);
+                result_ALU = Prov.Execute(Full);
                 PC = Prov.PC;
-                if (result_ALU == "ecall exit")
+                if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                 {
                     step_btn.IsEnabled = run_btn.IsEnabled = false;
                     reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
                     grid_stage.Items.Refresh();
                     grid_data.Items.Refresh();
                     data_register.Items.Refresh();
+                    Write_reg();
+                    Write_mem();
                     return;
                 }
                 if (result_ALU != "")
@@ -132,8 +142,10 @@ namespace Simulator_RISCV
                 }
                 //stage WB
                 if (result_MEM != "")
-                    Prov.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
+                    Memory.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
             }
+            Write_reg();
+            Write_mem();
             grid_stage.Items.Refresh();
             grid_data.Items.Refresh();
             data_register.Items.Refresh();
@@ -147,7 +159,7 @@ namespace Simulator_RISCV
                 Single.IsEnabled = Five.IsEnabled = false;
                 reset_btn.IsEnabled = true;
                 instruction = Read_code();
-                
+
                 Stage_conv["Fetch"] = instruction;
                 if (instruction == "00000000")
                 {
@@ -156,7 +168,7 @@ namespace Simulator_RISCV
                     Prov.Console = "Error PC:" + Prov.PC;
                     grid_data.Items.Refresh();
                     data_register.Items.Refresh();
-                    return;
+                    break;
                 }
                 if (Decoder.DecodeInstruction(instruction, out Full, out Asm) == 1)
                 {
@@ -166,23 +178,23 @@ namespace Simulator_RISCV
                     Prov.Console = "Error PC:" + Prov.PC;
                     grid_data.Items.Refresh();
                     data_register.Items.Refresh();
-                    return;
+                    break;
                 }
                 else
                 {
                     Stage_conv["Write back"] = Stage_conv["Memory"] = Stage_conv["Execute"] = Stage_conv["Decode"] = Asm;
                     Prov.PC = Prov.PC.ToUpper();
                     instr.Text += Prov.PC + "\t" + instruction + "\t" + Asm + "\n";
-                    result_ALU = Prov.Comand_Real(Full);
+                    result_ALU = Prov.Execute(Full);
                     PC = Prov.PC;
-                    if (result_ALU == "ecall exit")
+                    if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                     {
                         step_btn.IsEnabled = run_btn.IsEnabled = false;
                         reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
                         grid_stage.Items.Refresh();
                         grid_data.Items.Refresh();
                         data_register.Items.Refresh();
-                        return;
+                        break;
                     }
                     if (result_ALU != "")
                     {
@@ -190,16 +202,18 @@ namespace Simulator_RISCV
                     }
                     //stage WB
                     if (result_MEM != "")
-                        Prov.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
-                    
+                        Memory.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
+
                 }
-                grid_stage.Items.Refresh();
-                grid_data.Items.Refresh();
-                data_register.Items.Refresh();
             }
+            grid_stage.Items.Refresh();
+            grid_data.Items.Refresh();
+            data_register.Items.Refresh();
+            Write_reg();
+            Write_mem();
         }
 
-        private void Step_btn_Click2(object sender, RoutedEventArgs e)
+        private void Step_btn_Click_5(object sender, RoutedEventArgs e)
         {
             Prov.CLK++;
             Single.IsEnabled = Five.IsEnabled = false;
@@ -210,8 +224,8 @@ namespace Simulator_RISCV
                 {
                     Prov.PC = Prov.PC.ToUpper();
                     instr.Text += Prov.PC + "\t" + prev_Decode + "\t" + Prev_Asm + "\n";
-                    result_ALU = Prov.Comand_Real(Stage_conv["Execute"]);
-                    if (result_ALU == "ecall exit")
+                    result_ALU = Prov.Execute(Stage_conv["Execute"]);
+                    if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                     {
                         step_btn.IsEnabled = run_btn.IsEnabled = false;
                         reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
@@ -230,9 +244,9 @@ namespace Simulator_RISCV
                 {
                     Stage_conv["Write back"] = Stage_conv["Memory"];
                     Stage_conv["Memory"] = "nop";
-                    Prov.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
+                    Memory.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
                     result_MEM = "";
-                    
+
                 }
                 wait--;
                 Stage_conv["Wait"] = wait.ToString();
@@ -242,7 +256,6 @@ namespace Simulator_RISCV
             }
             else
             {
-                //добавить проверку на конец кода
                 instruction = Read_code();
                 if (instruction == "00000000")
                     instruction = "nop";
@@ -255,7 +268,18 @@ namespace Simulator_RISCV
                 {
                     Prev_Asm = Asm;
                     prev_Decode = Stage_conv["Decode"];
-                    Decoder.DecodeInstruction(Stage_conv["Decode"], out Full, out Asm);
+                    if (Decoder.DecodeInstruction(prev_Decode, out Full, out Asm) == 1)
+                    {
+                        Prov.Console = Asm + "\t" + instruction;
+                        run_btn.IsEnabled = false;
+                        step_btn.IsEnabled = false;
+                        Prov.Console = "Error PC:" + Prov.PC;
+                        grid_data.Items.Refresh();
+                        data_register.Items.Refresh();
+                        Write_reg();
+                        Write_mem();
+                        return;
+                    }
                     Stage_conv["Decode"] = Full;
                 }
                 prev_result_ALU = result_ALU;
@@ -306,8 +330,8 @@ namespace Simulator_RISCV
                     {
                         Prov.PC = Prov.PC.ToUpper();
                         instr.Text += Prov.PC + "\t" + prev_Decode + "\t" + Prev_Asm + "\n";
-                        result_ALU = Prov.Comand_Real(Stage_conv["Execute"]);
-                        if (result_ALU == "ecall exit")
+                        result_ALU = Prov.Execute(Stage_conv["Execute"]);
+                        if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                         {
                             step_btn.IsEnabled = run_btn.IsEnabled = false;
                             reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
@@ -333,15 +357,16 @@ namespace Simulator_RISCV
                 }
                 //stage WB
                 if (Stage_conv["Write back"] != "nop" && prev_result_MEM != "")
-                    Prov.Registers[prev_result_MEM.Split(' ')[1]][1] = prev_result_MEM.Split(' ')[0];
-
+                    Memory.Registers[prev_result_MEM.Split(' ')[1]][1] = prev_result_MEM.Split(' ')[0];
+                Write_reg();
+                Write_mem();
                 grid_stage.Items.Refresh();
                 grid_data.Items.Refresh();
                 data_register.Items.Refresh();
             }
         }
 
-        private void Run_btn_Click2(object sender, RoutedEventArgs e)
+        private void Run_btn_Click_5(object sender, RoutedEventArgs e)
         {
             Single.IsEnabled = Five.IsEnabled = false;
             while (true)
@@ -353,14 +378,16 @@ namespace Simulator_RISCV
                     {
                         Prov.PC = Prov.PC.ToUpper();
                         instr.Text += Prov.PC + "\t" + prev_Decode + "\t" + Prev_Asm + "\n";
-                        result_ALU = Prov.Comand_Real(Stage_conv["Execute"]);
-                        if (result_ALU == "ecall exit")
+                        result_ALU = Prov.Execute(Stage_conv["Execute"]);
+                        if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                         {
                             reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
                             step_btn.IsEnabled = run_btn.IsEnabled = false;
                             grid_stage.Items.Refresh();
                             grid_data.Items.Refresh();
                             data_register.Items.Refresh();
+                            Write_reg();
+                            Write_mem();
                             return;
                         }
                         if (Stage_conv["Execute"][0] == 'B' || Stage_conv["Execute"][0] == 'J')
@@ -373,7 +400,7 @@ namespace Simulator_RISCV
                     {
                         Stage_conv["Write back"] = Stage_conv["Memory"];
                         Stage_conv["Memory"] = "nop";
-                        Prov.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
+                        Memory.Registers[result_MEM.Split(' ')[1]][1] = result_MEM.Split(' ')[0];
                         result_MEM = "";
                     }
                     Stage_conv["Wait"] = wait.ToString();
@@ -394,7 +421,18 @@ namespace Simulator_RISCV
                     {
                         Prev_Asm = Asm;
                         prev_Decode = Stage_conv["Decode"];
-                        Decoder.DecodeInstruction(Stage_conv["Decode"], out Full, out Asm);
+                        if (Decoder.DecodeInstruction(prev_Decode, out Full, out Asm) == 1)
+                        {
+                            Prov.Console = Asm + "\t" + instruction;
+                            run_btn.IsEnabled = false;
+                            step_btn.IsEnabled = false;
+                            Prov.Console = "Error PC:" + Prov.PC;
+                            grid_data.Items.Refresh();
+                            data_register.Items.Refresh();
+                            Write_reg();
+                            Write_mem();
+                            return;
+                        }
                         Stage_conv["Decode"] = Full;
                     }
                     prev_result_ALU = result_ALU;
@@ -445,14 +483,16 @@ namespace Simulator_RISCV
                         {
                             Prov.PC = Prov.PC.ToUpper();
                             instr.Text += Prov.PC + "\t" + prev_Decode + "\t" + Prev_Asm + "\n";
-                            result_ALU = Prov.Comand_Real(Stage_conv["Execute"]);
-                            if (result_ALU == "ecall exit")
+                            result_ALU = Prov.Execute(Stage_conv["Execute"]);
+                            if (result_ALU == "ecall exit" || result_ALU.Length > 20)
                             {
                                 step_btn.IsEnabled = run_btn.IsEnabled = false;
                                 reset_btn.IsEnabled = Single.IsEnabled = Five.IsEnabled = true;
                                 grid_stage.Items.Refresh();
                                 grid_data.Items.Refresh();
                                 data_register.Items.Refresh();
+                                Write_reg();
+                                Write_mem();
                                 return;
                             }
                             if (Stage_conv["Execute"][0] == 'B' || Stage_conv["Execute"][0] == 'J')
@@ -462,7 +502,6 @@ namespace Simulator_RISCV
                             }
 
                         }
-
                     }
                     //stage memory
                     prev_result_MEM = result_MEM;
@@ -470,7 +509,7 @@ namespace Simulator_RISCV
                         result_MEM = Load_store(prev_result_ALU, Stage_conv["Memory"]);
                     //stage WB
                     if (Stage_conv["Write back"] != "nop" && prev_result_MEM != "")
-                        Prov.Registers[prev_result_MEM.Split(' ')[1]][1] = prev_result_MEM.Split(' ')[0];
+                        Memory.Registers[prev_result_MEM.Split(' ')[1]][1] = prev_result_MEM.Split(' ')[0];
                 }
             }
         }
@@ -491,19 +530,20 @@ namespace Simulator_RISCV
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             string filePath;
-            Prov.Reg_init();
+            Mem.Reg_init();
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.FilterIndex = 2;
+            openFileDialog.Filter = "asm files (*.S)|*.S";
             openFileDialog.RestoreDirectory = true;
             if (openFileDialog.ShowDialog() == true)
             {
                 filePath = openFileDialog.FileName;
-
-                Process pr = Process.Start(@"toolchain\create_hex.bat", filePath.Substring(0, filePath.Length - 2) + " " + Environment.CurrentDirectory + @"\src\data");
+                path_memory = Environment.CurrentDirectory + @"\src\data\" + openFileDialog.SafeFileName.Substring(0, openFileDialog.SafeFileName.Length - 2) + "_memory.hex";
+                path_registers = Environment.CurrentDirectory + @"\src\data\" + openFileDialog.SafeFileName.Substring(0, openFileDialog.SafeFileName.Length - 2) + "_registers.hex";
+                Process pr = Process.Start(@"toolchain\create_hex.bat", filePath.Substring(0, filePath.Length - 2) + " " +  path_memory);
                 while (!pr.HasExited) { }
                 try
                 {
-                    Reader = new StreamReader(@"src\data\memory.hex");
+                    Reader = new StreamReader(path_memory);
                 }
                 catch (Exception)
                 {
@@ -513,6 +553,17 @@ namespace Simulator_RISCV
                 string buf;
                 Reader.ReadLine();
                 int i = 0;
+                while (i < 256)
+                {
+                    Code_seg[Convert.ToString(i * 16, 16).PadLeft(8, '0')] = "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ";
+                    i++;
+                }
+                while (i < 2048)
+                {
+                    Alg_operation.Data_seg[Convert.ToString(i * 16, 16).PadLeft(8, '0')] = "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ";
+                    i++;
+                }
+                i = 0;
                 while (true)
                 {
                     buf = Reader.ReadLine();
@@ -540,45 +591,53 @@ namespace Simulator_RISCV
                     }
                     else break;
                 }
+                for (; i < 32; i++)
+                {
+                    if (i == 2)
+                        Memory.Registers["x" + i][1] = "0x00007FF0";
+                    else
+                        if (i == 3)
+                        Memory.Registers["x" + i][1] = "0x00001000";
+                    else
+                        Memory.Registers["x" + i][1] = "0x00000000";
+                }
+                Reader.Close();
                 result_ALU = result_MEM = instr.Text = Prov.Console = prev_result_MEM = prev_result_ALU = Prev_Asm = prev_Decode = "";
                 wait = Prov.CLK = 0;
+                Stage_conv["Write back"] = Stage_conv["Memory"] = Stage_conv["Execute"] = Stage_conv["Decode"] = Stage_conv["Fetch"] = "nop";
+                Stage_conv["Wait"] = "0";
                 Prov.PC = PC = "00000000";
-                run_btn.IsEnabled = step_btn.IsEnabled = true;
+                run_btn.IsEnabled = step_btn.IsEnabled = Five.IsEnabled = Single.IsEnabled = true;
+                Prov.File_name = openFileDialog.SafeFileName;
                 grid_data.Items.Refresh();
                 data_register.Items.Refresh();
                 Reader.Close();
+                Write_reg();
             }
 
         }
 
         void Write_reg()
         {
-            using (StreamWriter fs = new StreamWriter(@"src/data/register.hex"))
+            DirectoryInfo dirInfo = new DirectoryInfo(Environment.CurrentDirectory + @"\src\data");
+            if (!dirInfo.Exists)
+                dirInfo.Create();
+            using (StreamWriter fs = new StreamWriter(path_registers))
             {
-                foreach (var buf in Prov.Registers)
+                foreach (var buf in Memory.Registers)
                 {
-                    fs.WriteLine(buf.Key + " \t" + buf.Value);
+                    fs.WriteLine(buf.Key + "\t\t" + buf.Value[1]);
                 }
             }
         }
 
-        private void reset_btn_Click(object sender, RoutedEventArgs e)
+        private void Reset_btn_Click(object sender, RoutedEventArgs e)
         {
             Prov.PC = PC = "00000000";
             Stage_conv["Write back"] = Stage_conv["Memory"] = Stage_conv["Execute"] = Stage_conv["Decode"] = Stage_conv["Fetch"] = "nop";
             Stage_conv["Wait"] = "0";
-            int i = 1;
-            for (; i < 31; i++)
-            {
-                if (i == 2)
-                    Prov.Registers["x" + i][1] = "0x00007FF0";
-                else
-                    if(i == 3)
-                        Prov.Registers["x" + i][1] = "0x00001000";
-                    else
-                        Prov.Registers["x" + i][1] = "0x00000000";
-            }
-            i = 256;
+            Mem.Reg_init();
+            int i = 256;
             while (i < 2048)
             {
                 Alg_operation.Data_seg[Convert.ToString(i * 16, 16).PadLeft(8, '0')] = "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ";
@@ -586,11 +645,11 @@ namespace Simulator_RISCV
             }
             try
             {
-                Reader = new StreamReader(@"src\data\memory.hex");
+                Reader = new StreamReader(path_memory);
             }
             catch (Exception)
             {
-                Prov.Console = "File:" + @"src\data\memory.hex" + " not find";
+                Prov.Console = "File:" + path_memory + " not find";
                 return;
             }
             string buf;
@@ -612,11 +671,12 @@ namespace Simulator_RISCV
                 }
                 else break;
             }
+            Reader.Close();
             result_ALU = result_MEM = instr.Text = Prov.Console = prev_result_MEM = prev_result_ALU = Prev_Asm = prev_Decode = "";
             wait = Prov.CLK = 0;
             grid_stage.Items.Refresh();
             data_register.Items.Refresh();
-            run_btn.IsEnabled = step_btn.IsEnabled = true;
+            run_btn.IsEnabled = step_btn.IsEnabled = Five.IsEnabled = Single.IsEnabled = true;
             instr.Text = "";
         }
 
@@ -624,22 +684,52 @@ namespace Simulator_RISCV
         {
             step_btn.Click += Step_btn_Click;
             run_btn.Click += Run_btn_Click;
-            step_btn.Click -= Step_btn_Click2;
-            run_btn.Click -= Run_btn_Click2;
+            step_btn.Click -= Step_btn_Click_5;
+            run_btn.Click -= Run_btn_Click_5;
             Prov.Stage = Single.IsChecked = true;
             Five.IsChecked = false;
         }
 
         private void Five_Click(object sender, RoutedEventArgs e)
         {
-            step_btn.Click += Step_btn_Click2;
-            run_btn.Click += Run_btn_Click2;
+            step_btn.Click += Step_btn_Click_5;
+            run_btn.Click += Run_btn_Click_5;
             step_btn.Click -= Step_btn_Click;
             run_btn.Click -= Run_btn_Click;
             Prov.Stage = Single.IsChecked = false;
             Five.IsChecked = true;
         }
 
+        private void Save_log_Click(object sender, RoutedEventArgs e)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(Environment.CurrentDirectory + @"\log");
+            if (!dirInfo.Exists)
+                dirInfo.Create();
+            using (StreamWriter fs = new StreamWriter(@"log/result_log.log", true))
+            {
+                fs.Write(instr.Text);
+            }
+        }
+
+        private void Guide_Click(object sender, RoutedEventArgs e)
+        {
+            string text = "Пример выполнения:\n 1. Выбрать файл формата .S для записи в память. (File-> Open…)\n 2. Выбрать режим работы 5 - стадийный конвейер или нет. (Pipeline->Single / Five - Stage)\n"
+            + " 3. Если Вы хотите выполнить программу пошагово, то нажимать на кнопку Step до завершения программы, в противном случае нажать на кнопку Run.\n" 
+            + " 4. После завершения программы кнопки Step и Run станут не доступны, необходимо выполнить Reset.\n"
+            + " 5. Загрузить новую программу(пункт 1).\n"
+            + "Дополнительная информация:\n"
+            + " Кнопка Reset: код программы остается в памяти, но очищается память (data сегмент программы остаётся) и регистры.\n"
+            + " File->Save log-file: При необходимости можно сохранить пройденные шаги в log-file.";
+
+            MessageBox.Show(text, "Guide", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            string text = "Данный симулятор разработан в качестве курсового проекта. \n" +
+                "Contact:\nEvtushenko Oleg: evtushenko.mai.ru@mail.ru\nProzhirko Vladislav:  \nSamoylov Vladislav: ";
+            MessageBox.Show(text, "About", MessageBoxButton.OK, MessageBoxImage.Question);
+        }
 
         string Load_store(string data, string instr)
         {
@@ -719,10 +809,24 @@ namespace Simulator_RISCV
                 }
         }
 
-
-        void Write_data()
+        void Write_mem()
         {
-
+            DirectoryInfo dirInfo = new DirectoryInfo(Environment.CurrentDirectory + @"\src\data");
+            if (!dirInfo.Exists)
+                dirInfo.Create();
+            using (StreamWriter fs = new StreamWriter(path_memory))
+            {
+                fs.WriteLine("@00000000");
+                foreach (var buf in Code_seg)
+                {
+                    fs.WriteLine(buf.Value);
+                }
+                fs.WriteLine("@00001000");
+                foreach (var buf in Alg_operation.Data_seg)
+                {
+                    fs.WriteLine(buf.Value);
+                }
+            }
         }
     }
 }

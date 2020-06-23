@@ -65,10 +65,14 @@ namespace Simulator_RISCV
                         }
                         else
                         {
-                            if (inst[3] == DeshInst.Funct7)
+                            if (inst[2] == DeshInst.Funct3)
                             {
-                                AsmInst.Inst = inst[0];
-                                break;
+                                if (inst[3] == DeshInst.Funct7)
+                                {
+                                    AsmInst.Inst = inst[0];
+                                    break;
+                                }
+
                             }
                         }
                     }
@@ -191,7 +195,7 @@ namespace Simulator_RISCV
                 AsmInst.Op2 = "x" + Convert.ToString(Convert.ToInt32(Instruction.Substring(12, 5), 2), 10);//RS1
                 AsmInst.Op3 = Convert.ToString(Convert.ToInt32(Instruction.Substring(0, 12), 2), 16);//Imm
                 AsmInst.Asm_Comand = AsmInst.Inst + " " + AsmInst.Op1 + ", " + AsmInst.Op2 + ", 0x" + AsmInst.Op3;
-                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3;
+                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3.PadLeft(3, '0');
             }
             //////////////////////////////////////////////PAD LEFT??????????????????????????????????
             if ((AsmInst.Inst == "SLLI" || AsmInst.Inst == "SRLI" || AsmInst.Inst == "SRAI") && AsmInst.Full_Comand == "")
@@ -200,7 +204,7 @@ namespace Simulator_RISCV
                 AsmInst.Op2 = "x" + Convert.ToString(Convert.ToInt32(Instruction.Substring(12, 5), 2), 10);//RS1
                 AsmInst.Op3 = Convert.ToString(Convert.ToInt32(Instruction.Substring(7, 5), 2), 16);//shamt
                 AsmInst.Asm_Comand = AsmInst.Inst + " " + AsmInst.Op1 + ", " + AsmInst.Op2 + ", 0x" + AsmInst.Op3;
-                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3/*.PadLeft(8, '0')*/;
+                AsmInst.Full_Comand = AsmInst.Inst + " " + AsmInst.Op1 + " " + AsmInst.Op2 + " " + AsmInst.Op3.PadLeft(3, '0');
             }
 
             if ((AsmInst.Inst == "ADD" || AsmInst.Inst == "SUB" || AsmInst.Inst == "SLL" || AsmInst.Inst == "SLT" ||
